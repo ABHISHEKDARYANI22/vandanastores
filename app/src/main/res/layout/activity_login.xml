@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+
+    tools:context=".login">
+    <androidx.legacy.widget.Space
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        ></androidx.legacy.widget.Space>
+
+    <EditText
+        android:id="@+id/etpassword"
+        android:layout_width="281dp"
+        android:layout_height="42dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:textSize="20dp"
+        android:layout_gravity="center"
+        android:background="@drawable/edit_round"
+        android:ems="10"
+        android:hint="password"
+        android:inputType="textPassword" />
+    <androidx.legacy.widget.Space
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"></androidx.legacy.widget.Space>
+
+    <Button
+        android:id="@+id/btnlogin"
+        android:layout_width="140dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/buttonround"
+        android:text="LOGIN"
+        android:textColor="#ffffff" />
+</LinearLayout>

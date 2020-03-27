@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".startuppage">
+
+    <androidx.legacy.widget.Space
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        ></androidx.legacy.widget.Space>
+    <Button
+        android:id="@+id/btnlogin"
+        android:layout_width="235dp"
+        android:background="@drawable/buttonround"
+        android:textColor="#ffffff"
+        android:layout_height="91dp"
+        android:layout_gravity="center"
+        android:text="login"
+        android:textStyle="bold"
+        android:textSize="30dp"
+        />
+<androidx.legacy.widget.Space
+    android:layout_width="wrap_content"
+    android:layout_height="100dp"
+    ></androidx.legacy.widget.Space>
+    <Button
+        android:id="@+id/btnsell"
+        android:layout_width="235dp"
+        android:layout_height="91dp"
+        android:background="@drawable/buttonround"
+        android:textColor="#ffffff"
+        android:text="SELL"
+        android:layout_gravity="center"
+        android:textSize="30dp"
+        android:textStyle="bold" />
+</LinearLayout>

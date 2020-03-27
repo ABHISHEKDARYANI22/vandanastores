@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingTop="70dp"
+    android:paddingBottom="20dp"
+    tools:context=".sellstock">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+
+
+        <Button
+
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_gravity="center"
+            android:drawableStart="@drawable/scann"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+
+
+            ></Button>
+        <EditText
+            android:id="@+id/etimei"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/edit_round"
+            android:ems="10"
+            android:hint="IMEI"
+            android:inputType="number"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:textSize="25dp" />
+    </LinearLayout>
+
+        <androidx.legacy.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"></androidx.legacy.widget.Space>
+
+        <EditText
+            android:id="@+id/etcompanyauto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/edit_round"
+            android:ems="10"
+            android:hint="COMPANY"
+            android:paddingTop="5px"
+            android:paddingBottom="5px"
+            android:textSize="25dp"
+            android:inputType="textPersonName"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+           />
+
+        <androidx.legacy.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"></androidx.legacy.widget.Space>
+
+        <EditText
+            android:id="@+id/etphonename"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/edit_round"
+            android:ems="10"
+            android:hint="PHONE NAME"
+            android:inputType="text"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5px"
+            android:paddingBottom="5px"
+            android:textSize="25dp" />
+
+        <androidx.legacy.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"></androidx.legacy.widget.Space>
+
+        <EditText
+            android:id="@+id/etcustname"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/edit_round"
+            android:ems="10"
+            android:hint="CUSTOMER NAME"
+            android:inputType="textPersonName"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5px"
+            android:paddingBottom="5px"
+            android:textSize="25dp"/>
+
+        <androidx.legacy.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"></androidx.legacy.widget.Space>
+
+        <EditText
+            android:id="@+id/etphone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/edit_round"
+            android:ems="10"
+            android:hint="PHONE NUMBER"
+            android:inputType="phone"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5px"
+            android:paddingBottom="5px"
+            android:textSize="25dp" />
+
+        <androidx.legacy.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"></androidx.legacy.widget.Space>
+
+        <EditText
+            android:id="@+id/etautodate"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/edit_round"
+            android:ems="10"
+            android:hint="AUTO DATE"
+            android:inputType="date"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5px"
+            android:paddingBottom="5px"
+            android:textSize="25dp" />
+
+        <androidx.legacy.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"></androidx.legacy.widget.Space>
+
+        <EditText
+            android:id="@+id/etprice"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/edit_round"
+            android:ems="10"
+            android:hint="PRICE"
+            android:inputType="number"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5px"
+            android:paddingBottom="5px"
+            android:textSize="25dp" />
+
+        <androidx.legacy.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"></androidx.legacy.widget.Space>
+
+        <EditText
+            android:id="@+id/etaddnotes"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/edit_round"
+            android:ems="10"
+            android:hint="ADD NOTES"
+            android:inputType="textPersonName"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5px"
+            android:paddingBottom="5px"
+            android:textSize="25dp" />
+
+        <androidx.legacy.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"></androidx.legacy.widget.Space>
+
+        <Button
+            android:id="@+id/btnsell"
+            android:layout_width="131dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/buttonround"
+            android:text="SELL"
+
+            android:textColor="#ffffff"
+            android:textStyle="bold" />
+    </LinearLayout>

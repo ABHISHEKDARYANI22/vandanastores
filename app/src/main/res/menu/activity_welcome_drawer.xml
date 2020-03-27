@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_dailysale"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="DAILY SALE" />
+        <item
+            android:id="@+id/nav_seestock"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="SEE STOCK" />
+        <item
+            android:id="@+id/nav_addstock"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="ADD STOCK" />
+        <item
+            android:id="@+id/nav_addcompany"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="ADD COMPANY" />
+    </group>
+
+    <!--<item android:title="Communicate">
+        <menu>-->
+            <item
+                android:id="@+id/nav_searchsoldproduct"
+                android:icon="@drawable/ic_menu_share"
+                android:title="SEARCH SOLD PRODUCT" />
+
+    <!--    </menu>
+    </item>-->
+
+</menu>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_dailysale">
+
+    <fragment
+        android:id="@+id/nav_dailysale"
+        android:name="com.example.vandanastores.ui.DAILYSALE.DailysaleFragment"
+        android:label="DAILY SALE"
+        tools:layout="@layout/fragment_dailysale" />
+
+    <fragment
+        android:id="@+id/nav_seestock"
+        android:name="com.example.vandanastores.ui.SEESTOCK.SeeStockFragment"
+        android:label="SEE STOCK"
+        tools:layout="@layout/fragment_seestock" />
+
+    <fragment
+        android:id="@+id/nav_addstock"
+        android:name="com.example.vandanastores.ui.ADDSTOCK.AddStockFragment"
+        android:label="ADD STOCK"
+        tools:layout="@layout/fragment_addstock" />
+
+    <fragment
+        android:id="@+id/nav_addcompany"
+        android:name="com.example.vandanastores.ui.ADDCOMPANY.AddCompanyFragment"
+        android:label="ADD COMPANY"
+        tools:layout="@layout/fragment_addcompany" />
+
+    <fragment
+        android:id="@+id/nav_searchsoldproduct"
+        android:name="com.example.vandanastores.ui.SEARCHSOLDPRODUCT.SearchSoldProductFragment"
+        android:label="SEARCH SOLD PRODUCT"
+        tools:layout="@layout/fragment_searchsoldproduct" />
+
+
+</navigation>

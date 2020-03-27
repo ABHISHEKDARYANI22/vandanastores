@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.legacy.widget.Space
+        android:layout_width="wrap_content"
+        android:layout_height="150dp"
+        ></androidx.legacy.widget.Space>
+
+    <EditText
+        android:id="@+id/etcompany"
+        android:layout_width="339dp"
+        android:layout_height="45dp"
+        android:paddingLeft="10px"
+        android:paddingRight="10px"
+        android:background="@drawable/edit_round"
+        android:layout_gravity="center"
+
+        android:ems="10"
+        android:hint="company"
+        android:inputType="textPersonName" />
+<androidx.legacy.widget.Space
+    android:layout_width="wrap_content"
+    android:layout_height="30dp"
+    ></androidx.legacy.widget.Space>
+    <EditText
+        android:id="@+id/etmodel"
+
+        android:layout_width="339dp"
+        android:layout_height="45dp"
+        android:paddingLeft="10px"
+        android:paddingRight="10px"
+        android:background="@drawable/edit_round"
+        android:ems="10"
+        android:layout_gravity="center"
+        android:hint="model"
+        android:inputType="textPersonName"
+        />
+    <androidx.legacy.widget.Space
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        ></androidx.legacy.widget.Space>
+    <LinearLayout
+        android:layout_width="339dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/etimei"
+            android:layout_width="283dp"
+            android:layout_height="45dp"
+            android:background="@drawable/edit_round"
+            android:hint="IMEI"
+            android:inputType="number"
+
+            android:paddingLeft="10px"
+            android:paddingRight="10px"></EditText>
+
+        <Button
+            android:id="@+id/btnscanimei"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:drawableStart="@drawable/scann">
+
+        </Button>
+
+    </LinearLayout>
+    <androidx.legacy.widget.Space
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        ></androidx.legacy.widget.Space>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ADD"
+        android:layout_gravity="center"
+        android:id="@+id/ADD"
+        android:background="@drawable/buttonround"
+        android:textColor="#ffffff"
+        android:textStyle="bold"
+        ></Button>
+</LinearLayout>

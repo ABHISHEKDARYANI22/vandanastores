@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "183593577963",
+    "firebase_url": "https://vandanastores-82dd5.firebaseio.com",
+    "project_id": "vandanastores-82dd5",
+    "storage_bucket": "vandanastores-82dd5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:183593577963:android:1c56490bca3aad9b5afdae",
+        "android_client_info": {
+          "package_name": "com.example.vandanastores"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "183593577963-t61aarqjbmk6spdu38k3bh1l1g4pld95.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vandanastores",
+            "certificate_hash": "15f7d9080e744622a3667807815066b64fce886e"
+          }
+        },
+        {
+          "client_id": "183593577963-6s1bnd4o9bsvhi24s3ig45ab1aue0mhp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBg6_FDHMKmItD-MyHRtOWn9SdtasMpsoM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "183593577963-6s1bnd4o9bsvhi24s3ig45ab1aue0mhp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
