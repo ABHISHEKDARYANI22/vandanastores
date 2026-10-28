@@ -110,7 +110,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 (function(){
-const KEY="vandana-scratch-v1";
+const KEY="vandana-scratch-v2";
 const DEFAULT={
   shopName:"Vandana Stores",
   tagline:"Scratch karo, inaam jeeto!",
@@ -118,22 +118,22 @@ const DEFAULT={
   totalCoupons:200,
   issued:0,
   loseText:"Better luck next time",
-  loseWeight:40,
+  loseWeight:10,
   prizes:[
-    {id:"p1",name:"Free Chocolate",emoji:"🍫",value:10,qty:100,given:0,weight:100},
-    {id:"p2",name:"₹20 Off on Next Bill",emoji:"🏷️",value:20,qty:80,given:0,weight:50},
-    {id:"p3",name:"1 kg Sugar",emoji:"🍚",value:45,qty:40,given:0,weight:22},
-    {id:"p4",name:"Dairy Milk Silk",emoji:"🎁",value:80,qty:25,given:0,weight:12},
-    {id:"p5",name:"1 L Sunflower Oil",emoji:"🛢️",value:150,qty:15,given:0,weight:7},
-    {id:"p6",name:"₹500 Shopping Voucher",emoji:"💰",value:500,qty:3,given:0,weight:2},
-    {id:"p7",name:"Pressure Cooker",emoji:"🍲",value:1500,qty:1,given:0,weight:1},
-    {id:"p8",name:"Free Biscuit Pack",emoji:"🍪",value:10,qty:100,given:0,weight:100},
-    {id:"p9",name:"Free Toffee",emoji:"🍬",value:5,qty:200,given:0,weight:150},
-    {id:"p10",name:"₹50 Off on ₹500 Bill",emoji:"🎟️",value:50,qty:50,given:0,weight:20},
-    {id:"p11",name:"Bath Soap",emoji:"🧼",value:35,qty:40,given:0,weight:28},
-    {id:"p12",name:"500 g Tea Pack",emoji:"🍵",value:120,qty:15,given:0,weight:8},
-    {id:"p13",name:"5 kg Atta",emoji:"🌾",value:250,qty:8,given:0,weight:4},
-    {id:"p14",name:"Steel Dinner Set",emoji:"🍽️",value:900,qty:2,given:0,weight:1}
+    {id:"p1",name:"Free Screen Guard",emoji:"🛡️",value:99,qty:100,given:0,weight:10.1},
+    {id:"p2",name:"Mobile Back Cover",emoji:"🎨",value:199,qty:80,given:0,weight:5.03},
+    {id:"p3",name:"₹100 Off on Accessories",emoji:"🏷️",value:100,qty:100,given:0,weight:10.0},
+    {id:"p4",name:"Type-C Data Cable",emoji:"🔌",value:249,qty:60,given:0,weight:4.02},
+    {id:"p5",name:"Wired Earphones",emoji:"🎧",value:299,qty:40,given:0,weight:3.34},
+    {id:"p6",name:"Car Phone Holder",emoji:"🚗",value:349,qty:30,given:0,weight:2.87},
+    {id:"p7",name:"Fast Charger",emoji:"⚡",value:599,qty:20,given:0,weight:1.67},
+    {id:"p8",name:"Bluetooth Neckband",emoji:"🎶",value:999,qty:10,given:0,weight:1.0},
+    {id:"p9",name:"₹1,000 Off on a New Phone",emoji:"💰",value:1000,qty:10,given:0,weight:1.0},
+    {id:"p10",name:"10000 mAh Power Bank",emoji:"🔋",value:1299,qty:8,given:0,weight:0.77},
+    {id:"p11",name:"Bluetooth Speaker",emoji:"🔊",value:1499,qty:5,given:0,weight:0.67},
+    {id:"p12",name:"Wireless Earbuds",emoji:"🎵",value:1999,qty:5,given:0,weight:0.5},
+    {id:"p13",name:"Smartwatch",emoji:"⌚",value:2499,qty:2,given:0,weight:0.4},
+    {id:"p14",name:"Smartphone",emoji:"📱",value:9999,qty:1,given:0,weight:0.1}
   ],
   cardsShown:12,
   log:[]
@@ -318,7 +318,7 @@ function renderPin(target){
 }
 
 /* ---------- settings ---------- */
-function suggestWeight(v){v=+v||1;return Math.max(1,Math.round(1000/v))}
+function suggestWeight(v){v=+v||1;return Math.max(0.01,Math.round(100000/v)/100)}
 function renderAdmin(){
   const items=pool(S,false);const tot=items.reduce((a,b)=>a+b.w,0)||1;
   const pct=w=>(w/tot*100).toFixed(1)+"%";
@@ -346,7 +346,7 @@ function renderAdmin(){
 
     <section class="card" style="display:flex;flex-direction:column;gap:12px">
       <div class="row between"><h2>Prizes</h2><button class="small" id="add">Add prize</button></div>
-      <p class="note">Higher weight means the prize comes more often. Expensive items should get a small weight. "Auto" sets the weight from the price (1000 ÷ price), so a ₹10 item is 100 times more common than a ₹1,000 item. Stock 0 means unlimited.</p>
+      <p class="note">Higher weight means the prize comes more often. Expensive items should get a small weight. "Auto" sets the weight from the price (1000 ÷ price), so a ₹100 screen guard is 100 times more common than a ₹9,999 phone. Stock 0 means unlimited.</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Icon</th><th>Prize</th><th class="num">Price ₹</th><th class="num">Weight</th><th class="num">Stock</th><th class="num">Given</th><th class="num">Chance</th><th></th></tr></thead>
         <tbody>${S.prizes.map((p,i)=>{const out=p.qty>0&&p.given>=p.qty;return `<tr>
@@ -397,7 +397,7 @@ function renderAdmin(){
   $app.querySelectorAll("[data-auto]").forEach(b=>b.onclick=()=>{const p=S.prizes[+b.dataset.auto];p.weight=suggestWeight(p.value);save();renderAdmin()});
   $app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.prizes.splice(+b.dataset.del,1);save();renderAdmin();toast("Prize removed")});
   document.getElementById("autoAll").onclick=()=>{S.prizes.forEach(p=>p.weight=suggestWeight(p.value));save();renderAdmin();toast("Weights set from prices")};
-  document.getElementById("add").onclick=()=>{S.prizes.push({id:"p"+Date.now(),name:"New prize",emoji:"🎁",value:50,qty:10,given:0,weight:20});save();renderAdmin()};
+  document.getElementById("add").onclick=()=>{S.prizes.push({id:"p"+Date.now(),name:"New gift",emoji:"🎁",value:500,qty:10,given:0,weight:2});save();renderAdmin()};
   document.getElementById("goShop").onclick=()=>{location.hash=""};
   document.getElementById("goDemo").onclick=()=>location.hash="demo";
   document.getElementById("lock").onclick=()=>{setUnlocked(false);location.hash=""};
