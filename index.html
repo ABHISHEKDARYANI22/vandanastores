@@ -87,6 +87,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .pick-star{color:var(--maroon);font-size:20px;line-height:1}
 .pick-no{font-family:var(--display);font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
 .pick-t{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.pick.open{background:var(--surface);border-style:solid;border-color:var(--line);cursor:default;text-align:center}
+.pick.open:hover{transform:none}
+.pick.mine{border-color:var(--maroon);background:var(--rose-soft)}
+.o-emoji{font-size:34px;line-height:1.1}
+.o-name{font-size:13px;font-weight:600;line-height:1.2;color:var(--ink);text-wrap:balance}
 @media (prefers-reduced-motion:reduce){.pick{transition:none}}
 .ctabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--soft);border-radius:14px;padding:5px}
 .ctabs a{text-align:center;text-decoration:none;font-weight:700;color:var(--maroon);padding:8px;border-radius:10px}
@@ -133,7 +138,9 @@ const DEFAULT={
     {id:"p11",name:"Bluetooth Speaker",emoji:"🔊",value:1499,qty:5,given:0,weight:0.67},
     {id:"p12",name:"Wireless Earbuds",emoji:"🎵",value:1999,qty:5,given:0,weight:0.5},
     {id:"p13",name:"Smartwatch",emoji:"⌚",value:2499,qty:2,given:0,weight:0.4},
-    {id:"p14",name:"Smartphone",emoji:"📱",value:9999,qty:1,given:0,weight:0.1}
+    {id:"p14",name:"Smartphone",emoji:"📱",value:9999,qty:1,given:0,weight:0.1},
+    {id:"cycle",name:"Bicycle",emoji:"🚲",value:8000,qty:1,given:0,weight:0.12},
+    {id:"scooty",name:"Scooty",emoji:"🛵",value:75000,qty:1,given:0,weight:0.01}
   ],
   cardsShown:12,
   onePerPhone:true,
@@ -143,6 +150,7 @@ function clone(o){return JSON.parse(JSON.stringify(o))}
 function load(){try{const s=localStorage.getItem(KEY);if(s){return Object.assign(clone(DEFAULT),JSON.parse(s))}}catch(e){}return clone(DEFAULT)}
 let S=load();
 if(String(S.pin)==="1234"){S.pin="7755";save()}
+if(!S.vehiclesAdded){S.vehiclesAdded=true;DEFAULT.prizes.filter(d=>d.id==="cycle"||d.id==="scooty").forEach(d=>{if(!S.prizes.some(x=>x.id===d.id))S.prizes.push(clone(d))});save()}
 let CUR=null; // customer currently playing: {name, phone}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let unlocked=false; try{unlocked=sessionStorage.getItem(KEY+"-u")==="1"}catch(e){}
@@ -247,7 +255,7 @@ function renderCustomer(){
     <div class="pick-grid">${Array.from({length:n},(_,i)=>`<button class="pick" data-n="${i+1}" aria-label="Coupon ${i+1}"><span class="pick-star">★</span><span class="pick-no">${i+1}</span><span class="pick-t">Scratch me</span></button>`).join("")}</div>
   </div>`;
   wireLogo();
-  $app.querySelectorAll(".pick").forEach(b=>b.onclick=()=>openCard(+b.dataset.n));
+  $app.querySelectorAll(".pick").forEach(b=>b.onclick=()=>openCard(+b.dataset.n,n));
   document.getElementById("notMe").onclick=()=>{CUR=null;renderCustomer()};
 }
 function cleanPhone(v){let d=String(v).replace(/\D/g,"");if(d.length===12&&d.startsWith("91"))d=d.slice(2);if(d.length===11&&d.startsWith("0"))d=d.slice(1);return d}
@@ -272,11 +280,12 @@ function renderDetails(){
     CUR={name,phone};renderCustomer();
   };
 }
-function openCard(no){
+function openCard(no,total){
   $app.innerHTML=`<div class="wrap">${brand()}
     <div class="row between"><span class="ribbon">Coupon ${no}</span><span class="stock">Coupons left <b>${remaining()}</b></span></div>
     <div class="scratch-zone" id="zone"><div class="prize" id="prize"></div><canvas class="foil"></canvas></div>
     <p class="hint" id="hint">Scratch the silver area to see your gift.</p>
+    <section id="others" hidden><h3 style="margin-bottom:8px">What the other coupons had</h3><div class="pick-grid" id="othersGrid"></div></section>
     <button class="big" id="next" hidden>Next customer</button>
   </div>`;
   wireLogo();
@@ -290,8 +299,25 @@ function openCard(no){
     CUR=null;
     if(p){confetti();document.getElementById("hint").textContent="Show this code at the counter to collect your gift."}
     else document.getElementById("hint").textContent="Thank you! Come again soon.";
+    showOthers(no,total||1,r);
     const n=document.getElementById("next");n.hidden=false;n.onclick=renderCustomer;
   });
+}
+// after a reveal, open the coupons the customer did not pick; Scooty and Bicycle always appear among them
+function showOthers(no,total,r){
+  const k=total-1;if(k<1)return;
+  const fill=[];
+  S.prizes.filter(p=>(p.id==="scooty"||p.id==="cycle")&&p.weight>0&&!(r.prize&&r.prize.id===p.id)).forEach(p=>fill.length<k&&fill.push(p));
+  while(fill.length<k)fill.push(draw(S,true));
+  for(let i=fill.length-1;i>0;i--){const j=crypto.getRandomValues(new Uint32Array(1))[0]%(i+1);[fill[i],fill[j]]=[fill[j],fill[i]]}
+  let f=0;const cells=[];
+  for(let i=1;i<=total;i++){
+    if(i===no){cells.push(`<div class="pick open mine"><span class="o-emoji">${esc(r.prize?r.prize.emoji||"🎁":"🙏")}</span><span class="o-name">${esc(r.prize?r.prize.name:"No prize")}</span><span class="pick-t">Your coupon</span></div>`);continue}
+    const p=fill[f++];
+    cells.push(`<div class="pick open"><span class="o-emoji">${esc(p?p.emoji||"🎁":"🙏")}</span><span class="o-name">${esc(p?p.name:"Better luck")}</span><span class="pick-t">Coupon ${i}</span></div>`);
+  }
+  document.getElementById("othersGrid").innerHTML=cells.join("");
+  document.getElementById("others").hidden=false;
 }
 
 /* ---------- demo page (hidden, nothing is used up) ---------- */
