@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Vandana Stores Scratch & Win</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Baloo+2:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one centered column; a shop-counter banner, a big scratch card, owner pages behind a PIN */
+:root{
+  --bg:#fff7e8; --surface:#ffffff; --ink:#3a1420; --muted:#7a5a60; --line:#efd9bf;
+  --maroon:#7d1531; --saffron:#f39a1e; --marigold:#ffc436; --leaf:#2f7d4f; --danger:#b3261e;
+  --foil1:#c9c3b8; --foil2:#e9e4da;
+  --display:"Yatra One","Baloo 2",Georgia,serif;
+  --body:"Baloo 2",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1d0f13; --surface:#2a161c; --ink:#fbeee0; --muted:#c9a9ad; --line:#4a2a32;
+  --maroon:#ff7d9a; --saffron:#ffae45; --marigold:#ffcf5a; --leaf:#6fd39a; --danger:#ff8a80;
+  --foil1:#8f8a82; --foil2:#b9b3a8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1d0f13; --surface:#2a161c; --ink:#fbeee0; --muted:#c9a9ad; --line:#4a2a32;
+  --maroon:#ff7d9a; --saffron:#ffae45; --marigold:#ffcf5a; --leaf:#6fd39a; --danger:#ff8a80;
+  --foil1:#8f8a82; --foil2:#b9b3a8; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.wide{max-width:820px}
+header.brand{display:flex;align-items:center;gap:12px;user-select:none;-webkit-user-select:none}
+.logo{width:52px;height:52px;border-radius:50%;background:var(--maroon);color:var(--marigold);display:grid;place-items:center;font-family:var(--display);font-size:28px;flex:none;cursor:default;border:3px solid var(--marigold)}
+.brand h1{font-family:var(--display);font-weight:400;font-size:clamp(24px,6vw,32px);line-height:1.1;margin:0;color:var(--maroon);text-wrap:balance}
+.brand p{margin:0;color:var(--muted);font-size:14px}
+.toran{height:14px;background:
+  radial-gradient(circle at 7px 0,var(--saffron) 6px,transparent 7px) 0 0/14px 14px repeat-x;opacity:.9}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px}
+.scratch-zone{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border-radius:16px;overflow:hidden;
+  border:3px dashed var(--saffron);background:var(--surface);touch-action:none}
+.prize{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:16px}
+.prize .emoji{font-size:clamp(48px,15vw,72px);line-height:1}
+.prize .label{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.prize .name{font-family:var(--display);font-size:clamp(24px,7vw,34px);color:var(--maroon);line-height:1.15;text-wrap:balance}
+.prize .code{font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:.08em;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:2px 10px;margin-top:4px}
+canvas.foil{position:absolute;inset:0;width:100%;height:100%;cursor:grab;transition:opacity .5s}
+canvas.foil.gone{opacity:0;pointer-events:none}
+.hint{text-align:center;color:var(--muted);margin:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+button,.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--maroon);background:var(--maroon);color:var(--bg);padding:10px 18px;cursor:pointer}
+button.ghost{background:transparent;color:var(--maroon)}
+button.small{padding:4px 10px;font-size:14px;border-radius:8px}
+button.danger{border-color:var(--danger);background:transparent;color:var(--danger)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+.big{font-size:19px;padding:14px 26px;width:100%}
+.stock{display:flex;justify-content:center;gap:8px;font-size:14px;color:var(--muted)}
+.stock b{color:var(--ink);font-variant-numeric:tabular-nums}
+.ribbon{display:inline-block;background:var(--marigold);color:#3a1420;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:2px 10px;border-radius:999px}
+h2{font-family:var(--display);font-weight:400;color:var(--maroon);font-size:24px;margin:0;text-wrap:balance}
+h3{font-size:17px;margin:0}
+label{font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0;width:100%}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px;min-width:640px}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;padding:6px}
+td{padding:6px;border-top:1px solid var(--line);vertical-align:middle}
+td input{padding:6px 8px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.pct{font-weight:700;color:var(--leaf);font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:4px;background:var(--saffron)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{background:transparent;color:var(--maroon);padding:6px 14px}
+.tabs button[aria-pressed="true"]{background:var(--maroon);color:var(--bg)}
+.note{font-size:14px;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;z-index:20}
+.pin{display:flex;gap:8px;justify-content:center}
+.pin input{width:200px;text-align:center;font-size:24px;letter-spacing:.4em}
+.err{color:var(--danger);font-size:14px;margin:0;text-align:center}
+.log li{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:6px 0;font-size:14px}
+.log{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto}
+.demo-flag{background:var(--saffron);color:#3a1420;text-align:center;font-weight:700;border-radius:10px;padding:4px}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:15}
+@media (prefers-reduced-motion:reduce){canvas.foil{transition:none}}
+</style>
+
+<div id="app"></div>
+<canvas class="confetti" id="confetti" hidden></canvas>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const KEY="vandana-scratch-v1";
+const DEFAULT={
+  shopName:"Vandana Stores",
+  tagline:"Scratch karo, inaam jeeto!",
+  pin:"1234",
+  totalCoupons:200,
+  issued:0,
+  loseText:"Better luck next time",
+  loseWeight:40,
+  prizes:[
+    {id:"p1",name:"Free Chocolate",emoji:"🍫",value:10,qty:100,given:0,weight:100},
+    {id:"p2",name:"₹20 Off on Next Bill",emoji:"🏷️",value:20,qty:80,given:0,weight:50},
+    {id:"p3",name:"1 kg Sugar",emoji:"🍚",value:45,qty:40,given:0,weight:22},
+    {id:"p4",name:"Dairy Milk Silk",emoji:"🎁",value:80,qty:25,given:0,weight:12},
+    {id:"p5",name:"1 L Sunflower Oil",emoji:"🛢️",value:150,qty:15,given:0,weight:7},
+    {id:"p6",name:"₹500 Shopping Voucher",emoji:"💰",value:500,qty:3,given:0,weight:2},
+    {id:"p7",name:"Pressure Cooker",emoji:"🍲",value:1500,qty:1,given:0,weight:1}
+  ],
+  log:[]
+};
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function load(){try{const s=localStorage.getItem(KEY);if(s){return Object.assign(clone(DEFAULT),JSON.parse(s))}}catch(e){}return clone(DEFAULT)}
+let S=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let unlocked=false; try{unlocked=sessionStorage.getItem(KEY+"-u")==="1"}catch(e){}
+function setUnlocked(v){unlocked=v;try{v?sessionStorage.setItem(KEY+"-u","1"):sessionStorage.removeItem(KEY+"-u")}catch(e){}}
+
+const $app=document.getElementById("app");
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2200)}
+
+/* ---------- prize drawing ---------- */
+function pool(state,ignoreStock){
+  const items=state.prizes.filter(p=>p.weight>0&&(ignoreStock||p.qty<=0||p.given<p.qty)).map(p=>({p,w:+p.weight}));
+  if(state.loseWeight>0)items.push({p:null,w:+state.loseWeight});
+  return items;
+}
+function draw(state,ignoreStock){
+  const items=pool(state,ignoreStock);const total=items.reduce((a,b)=>a+b.w,0);
+  if(total<=0)return null;
+  const buf=new Uint32Array(1);crypto.getRandomValues(buf);let r=buf[0]/4294967296*total;
+  for(const it of items){if((r-=it.w)<0)return it.p}
+  return items[items.length-1].p;
+}
+function code(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";const b=new Uint8Array(5);crypto.getRandomValues(b);for(const x of b)s+=a[x%a.length];return "VS-"+s}
+function remaining(){return Math.max(0,S.totalCoupons-S.issued)}
+
+/* ---------- scratch card ---------- */
+function mountScratch(zone,result,onReveal){
+  const cv=zone.querySelector("canvas");const ctx=cv.getContext("2d");
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const w=zone.clientWidth,h=zone.clientHeight;cv.width=w*dpr;cv.height=h*dpr;ctx.scale(dpr,dpr);
+  const css=getComputedStyle(document.documentElement);
+  const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,css.getPropertyValue("--foil1"));g.addColorStop(.5,css.getPropertyValue("--foil2"));g.addColorStop(1,css.getPropertyValue("--foil1"));
+  ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  ctx.globalAlpha=.18;ctx.fillStyle="#000";
+  for(let y=10;y<h;y+=26)for(let x=(y/26%2)*20;x<w;x+=40){ctx.beginPath();ctx.arc(x,y,3,0,7);ctx.fill()}
+  ctx.globalAlpha=1;ctx.fillStyle="#5a3a2a";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.font="28px 'Yatra One', Georgia, serif";ctx.fillText("Scratch here",w/2,h/2-12);
+  ctx.font="600 15px 'Baloo 2', sans-serif";ctx.fillText("Use your finger or mouse",w/2,h/2+20);
+  ctx.globalCompositeOperation="destination-out";
+  let down=false,last=null,done=false;const R=Math.max(18,w/14);
+  function pt(e){const b=cv.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}}
+  function scratch(p){ctx.lineWidth=R*2;ctx.lineCap="round";ctx.beginPath();ctx.moveTo((last||p).x,(last||p).y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.beginPath();ctx.arc(p.x,p.y,R,0,7);ctx.fill();last=p}
+  function cleared(){const d=ctx.getImageData(0,0,cv.width,cv.height).data;let c=0,n=0;for(let i=3;i<d.length;i+=64){n++;if(d[i]<20)c++}return c/n}
+  function finish(){if(done)return;done=true;cv.classList.add("gone");onReveal()}
+  cv.addEventListener("pointerdown",e=>{if(done)return;down=true;last=null;cv.setPointerCapture(e.pointerId);scratch(pt(e))});
+  cv.addEventListener("pointermove",e=>{if(down&&!done)scratch(pt(e))});
+  const up=()=>{if(!down)return;down=false;last=null;if(!done&&cleared()>.5)finish()};
+  cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  return {reveal:finish};
+}
+function prizeHTML(r){
+  if(r&&r.prize)return `<span class="label">You won</span><span class="emoji">${esc(r.prize.emoji||"🎁")}</span><span class="name">${esc(r.prize.name)}</span><span class="code">${esc(r.code)}</span>`;
+  return `<span class="emoji">🙏</span><span class="name">${esc(S.loseText)}</span><span class="label">Thank you for shopping</span>`;
+}
+
+/* ---------- confetti ---------- */
+function confetti(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const c=document.getElementById("confetti");c.hidden=false;const x=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;
+  const cols=["#f39a1e","#ffc436","#7d1531","#2f7d4f","#ff6f91"];
+  const ps=Array.from({length:120},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.4,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,s:4+Math.random()*6,c:cols[Math.random()*5|0],a:Math.random()*6}));
+  let f=0;(function tick(){x.clearRect(0,0,c.width,c.height);for(const p of ps){p.x+=p.vx;p.y+=p.vy;p.a+=.1;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()}
+    if(++f<150)requestAnimationFrame(tick);else{c.hidden=true}})();
+}
+
+/* ---------- header with hidden entry ---------- */
+function brand(sub){
+  return `<header class="brand"><div class="logo" id="logo" aria-hidden="true">V</div><div><h1>${esc(S.shopName)}</h1><p>${esc(sub||S.tagline)}</p></div></header><div class="toran"></div>`;
+}
+function wireLogo(){
+  const l=document.getElementById("logo");if(!l)return;let taps=0,t;
+  l.addEventListener("click",()=>{taps++;clearTimeout(t);t=setTimeout(()=>taps=0,1500);if(taps>=5){taps=0;location.hash="admin"}});
+}
+
+/* ---------- customer page ---------- */
+function renderCustomer(){
+  const left=remaining();
+  if(left<=0){
+    $app.innerHTML=`<div class="wrap">${brand()}<div class="card" style="text-align:center"><h2>All coupons are over</h2><p class="note">Please ask at the counter about our next offer.</p></div></div>`;wireLogo();return;
+  }
+  $app.innerHTML=`<div class="wrap">${brand()}
+    <div class="row between"><span class="ribbon">Scratch &amp; Win</span><span class="stock">Coupons left <b>${left}</b></span></div>
+    <div class="scratch-zone" id="zone"><div class="prize" id="prize"></div><canvas class="foil"></canvas></div>
+    <p class="hint" id="hint">Scratch the silver area to see your gift.</p>
+    <button class="big" id="next" hidden>Next customer</button>
+  </div>`;
+  wireLogo();
+  // decide result up-front, record it only once revealed
+  const p=draw(S,false);const r={prize:p,code:p?code():null};
+  document.getElementById("prize").innerHTML=prizeHTML(r);
+  mountScratch(document.getElementById("zone"),r,()=>{
+    S.issued++;
+    if(p){const real=S.prizes.find(x=>x.id===p.id);if(real)real.given++}
+    S.log.unshift({t:Date.now(),prize:p?p.name:null,code:r.code});S.log=S.log.slice(0,500);save();
+    if(p){confetti();document.getElementById("hint").textContent="Show this code at the counter to collect your gift."}
+    else document.getElementById("hint").textContent="Thank you! Come again soon.";
+    const n=document.getElementById("next");n.hidden=false;n.onclick=renderCustomer;
+  });
+}
+
+/* ---------- demo page (hidden, nothing is used up) ---------- */
+let demoTab="try";
+function renderDemo(){
+  $app.innerHTML=`<div class="wrap">${brand("Demo mode for the shop staff")}
+    <div class="demo-flag">DEMO: practice cards, no coupons or gifts are used up</div>
+    <div class="tabs" role="group" aria-label="Demo view"><button id="t-try" aria-pressed="${demoTab==="try"}">Try a card</button><button id="t-sim" aria-pressed="${demoTab==="sim"}">Test 1,000 cards</button></div>
+    <div id="dbody"></div>
+    <div class="row"><button class="ghost" id="toAdmin">Settings</button><button class="ghost" id="toShop">Customer page</button></div>
+  </div>`;
+  wireLogo();
+  document.getElementById("t-try").onclick=()=>{demoTab="try";renderDemo()};
+  document.getElementById("t-sim").onclick=()=>{demoTab="sim";renderDemo()};
+  document.getElementById("toAdmin").onclick=()=>location.hash="admin";
+  document.getElementById("toShop").onclick=()=>{location.hash=""};
+  const body=document.getElementById("dbody");
+  if(demoTab==="try"){
+    body.innerHTML=`<div class="scratch-zone" id="zone"><div class="prize" id="prize"></div><canvas class="foil"></canvas></div>
+      <div class="row" style="margin-top:12px"><button id="again" style="flex:1">New demo card</button><button class="ghost" id="rev">Reveal</button></div>`;
+    const p=draw(S,true);const r={prize:p,code:p?"DEMO-"+code().slice(3):null};
+    document.getElementById("prize").innerHTML=prizeHTML(r);
+    const sc=mountScratch(document.getElementById("zone"),r,()=>{if(p)confetti()});
+    document.getElementById("again").onclick=renderDemo;document.getElementById("rev").onclick=()=>sc.reveal();
+  }else{
+    const N=1000,counts={};let lose=0;
+    for(let i=0;i<N;i++){const p=draw(S,true);if(p)counts[p.id]=(counts[p.id]||0)+1;else lose++}
+    const rows=S.prizes.map(p=>({name:(p.emoji||"")+" "+p.name,n:counts[p.id]||0})).concat([{name:"🙏 "+S.loseText,n:lose}]);
+    const max=Math.max(...rows.map(r=>r.n),1);
+    body.innerHTML=`<div class="card"><h3>What 1,000 random cards would give</h3><p class="note">Uses your current weights. Run it again to see how it changes.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">${rows.map(r=>`<div><div class="row between"><span>${esc(r.name)}</span><b style="font-variant-numeric:tabular-nums">${r.n}</b></div><div class="bar" style="width:${r.n/max*100}%"></div></div>`).join("")}</div>
+      <button style="margin-top:14px" id="rerun">Run again</button></div>`;
+    document.getElementById("rerun").onclick=renderDemo;
+  }
+}
+
+/* ---------- PIN gate ---------- */
+function renderPin(target){
+  $app.innerHTML=`<div class="wrap">${brand("Owner area")}
+    <form class="card" id="pinf" style="display:flex;flex-direction:column;gap:12px;align-items:center">
+      <h2>Enter owner PIN</h2>
+      <div class="pin"><input id="pinv" type="password" inputmode="numeric" autocomplete="off" aria-label="PIN"></div>
+      <p class="err" id="perr" hidden>That PIN is not right. Try again.</p>
+      <div class="row"><button type="submit">Open</button><button type="button" class="ghost" id="back">Back to shop</button></div>
+      <p class="note">First time? The PIN is 1234. Change it in Settings.</p>
+    </form></div>`;
+  document.getElementById("pinv").focus();
+  document.getElementById("back").onclick=()=>{location.hash=""};
+  document.getElementById("pinf").onsubmit=e=>{e.preventDefault();
+    if(document.getElementById("pinv").value===String(S.pin)){setUnlocked(true);route()}
+    else document.getElementById("perr").hidden=false};
+}
+
+/* ---------- settings ---------- */
+function suggestWeight(v){v=+v||1;return Math.max(1,Math.round(1000/v))}
+function renderAdmin(){
+  const items=pool(S,false);const tot=items.reduce((a,b)=>a+b.w,0)||1;
+  const pct=w=>(w/tot*100).toFixed(1)+"%";
+  $app.innerHTML=`<div class="wrap wide">${brand("Settings")}
+    <div class="row between"><div class="row"><button class="ghost small" id="goShop">Customer page</button><button class="ghost small" id="goDemo">Demo</button></div><button class="ghost small" id="lock">Lock</button></div>
+
+    <section class="card" style="display:flex;flex-direction:column;gap:12px">
+      <h2>Coupons</h2>
+      <div class="grid2">
+        <label>Total scratch coupons<input id="f-total" type="number" min="0" value="${S.totalCoupons}"></label>
+        <label>Already scratched<input id="f-issued" type="number" min="0" value="${S.issued}"></label>
+        <label>Coupons left<input value="${remaining()}" disabled></label>
+      </div>
+      <div class="grid2">
+        <label>Shop name<input id="f-name" value="${esc(S.shopName)}"></label>
+        <label>Tagline<input id="f-tag" value="${esc(S.tagline)}"></label>
+      </div>
+      <div class="grid2">
+        <label>No-prize message<input id="f-lose" value="${esc(S.loseText)}"></label>
+        <label>No-prize weight<input id="f-losew" type="number" min="0" value="${S.loseWeight}"></label>
+        <label>Chance of no prize<input value="${pct(+S.loseWeight)}" disabled></label>
+      </div>
+    </section>
+
+    <section class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="row between"><h2>Prizes</h2><button class="small" id="add">Add prize</button></div>
+      <p class="note">Higher weight means the prize comes more often. Expensive items should get a small weight. "Auto" sets the weight from the price (1000 ÷ price), so a ₹10 item is 100 times more common than a ₹1,000 item. Stock 0 means unlimited.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Icon</th><th>Prize</th><th class="num">Price ₹</th><th class="num">Weight</th><th class="num">Stock</th><th class="num">Given</th><th class="num">Chance</th><th></th></tr></thead>
+        <tbody>${S.prizes.map((p,i)=>{const out=p.qty>0&&p.given>=p.qty;return `<tr>
+          <td style="width:64px"><input data-i="${i}" data-k="emoji" value="${esc(p.emoji||"")}" aria-label="Icon"></td>
+          <td><input data-i="${i}" data-k="name" value="${esc(p.name)}" aria-label="Prize name"></td>
+          <td style="width:90px"><input data-i="${i}" data-k="value" type="number" min="0" value="${p.value}" aria-label="Price"></td>
+          <td style="width:130px"><div class="row" style="flex-wrap:nowrap;gap:4px"><input data-i="${i}" data-k="weight" type="number" min="0" step="any" value="${p.weight}" aria-label="Weight"><button class="ghost small" data-auto="${i}" title="Set from price">Auto</button></div></td>
+          <td style="width:80px"><input data-i="${i}" data-k="qty" type="number" min="0" value="${p.qty}" aria-label="Stock"></td>
+          <td class="num">${p.given}</td>
+          <td class="num"><span class="pct">${out?"Out":pct(+p.weight)}</span></td>
+          <td><button class="danger small" data-del="${i}" aria-label="Remove ${esc(p.name)}">Remove</button></td></tr>`}).join("")}</tbody>
+      </table></div>
+      <div class="row"><button class="ghost small" id="autoAll">Auto weights for all</button></div>
+    </section>
+
+    <section class="card" style="display:flex;flex-direction:column;gap:12px">
+      <h2>Owner PIN</h2>
+      <div class="grid2"><label>New PIN<input id="f-pin" type="password" inputmode="numeric" value="${esc(S.pin)}"></label></div>
+      <p class="note">Open Settings by tapping the round V logo 5 times on the customer page, or add #admin to the link. Add #demo for the demo.</p>
+    </section>
+
+    <section class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="row between"><h2>Recent winners</h2><button class="ghost small" id="copyLog">Copy list</button></div>
+      ${S.log.length?`<ul class="log">${S.log.slice(0,100).map(l=>`<li><span>${new Date(l.t).toLocaleString()}</span><span>${l.prize?esc(l.prize):"No prize"}</span><span style="font-variant-numeric:tabular-nums">${l.code||""}</span></li>`).join("")}</ul>`:`<p class="note">No cards scratched yet. Each scratched card shows up here with its code, so you can check codes at the counter.</p>`}
+    </section>
+
+    <section class="card" style="display:flex;flex-direction:column;gap:10px">
+      <h2>Start a new campaign</h2>
+      <p class="note">Sets scratched and given counts back to zero and clears the winners list. Prizes and weights stay.</p>
+      <div class="row"><button class="danger" id="reset">Reset counts</button><button class="danger" id="confirmReset" hidden>Yes, reset now</button></div>
+    </section>
+  </div>`;
+  wireLogo();
+  const num=v=>Math.max(0,+v||0);
+  const bind=(id,fn)=>document.getElementById(id).addEventListener("change",e=>{fn(e.target.value);save();renderAdmin()});
+  bind("f-total",v=>S.totalCoupons=Math.floor(num(v)));
+  bind("f-issued",v=>S.issued=Math.floor(num(v)));
+  bind("f-name",v=>S.shopName=v.trim()||"Vandana Stores");
+  bind("f-tag",v=>S.tagline=v);
+  bind("f-lose",v=>S.loseText=v.trim()||"Better luck next time");
+  bind("f-losew",v=>S.loseWeight=num(v));
+  bind("f-pin",v=>{if(v.trim()){S.pin=v.trim();toast("PIN changed")}});
+  $app.querySelectorAll("input[data-k]").forEach(inp=>inp.addEventListener("change",e=>{
+    const p=S.prizes[+e.target.dataset.i],k=e.target.dataset.k;
+    p[k]=(k==="name"||k==="emoji")?e.target.value:num(e.target.value);
+    if(k==="qty")p.qty=Math.floor(p.qty);save();renderAdmin();toast("Saved")}));
+  $app.querySelectorAll("[data-auto]").forEach(b=>b.onclick=()=>{const p=S.prizes[+b.dataset.auto];p.weight=suggestWeight(p.value);save();renderAdmin()});
+  $app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.prizes.splice(+b.dataset.del,1);save();renderAdmin();toast("Prize removed")});
+  document.getElementById("autoAll").onclick=()=>{S.prizes.forEach(p=>p.weight=suggestWeight(p.value));save();renderAdmin();toast("Weights set from prices")};
+  document.getElementById("add").onclick=()=>{S.prizes.push({id:"p"+Date.now(),name:"New prize",emoji:"🎁",value:50,qty:10,given:0,weight:20});save();renderAdmin()};
+  document.getElementById("goShop").onclick=()=>{location.hash=""};
+  document.getElementById("goDemo").onclick=()=>location.hash="demo";
+  document.getElementById("lock").onclick=()=>{setUnlocked(false);location.hash=""};
+  document.getElementById("reset").onclick=()=>{document.getElementById("confirmReset").hidden=false};
+  document.getElementById("confirmReset").onclick=()=>{S.issued=0;S.prizes.forEach(p=>p.given=0);S.log=[];save();renderAdmin();toast("Counts reset")};
+  document.getElementById("copyLog").onclick=()=>{
+    const txt=S.log.map(l=>`${new Date(l.t).toLocaleString()}\t${l.prize||"No prize"}\t${l.code||""}`).join("\n");
+    navigator.clipboard.writeText(txt).then(()=>toast("Copied"),()=>toast("Copy is not allowed here"));
+  };
+}
+
+/* ---------- routing ---------- */
+function route(){
+  const h=location.hash.replace("#","");
+  if(h==="admin"||h==="demo"){if(!unlocked)return renderPin(h);return h==="admin"?renderAdmin():renderDemo()}
+  renderCustomer();
+}
+window.addEventListener("hashchange",route);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(route);else route();
+})();
+</script>
+
+</body>
+</html>
