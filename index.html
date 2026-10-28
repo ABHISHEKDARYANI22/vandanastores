@@ -12,21 +12,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Baloo+2:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: one centered column; a shop-counter banner, a big scratch card, owner pages behind a PIN */
+/* Light-only by request: soft cream ground, rose accent, pastel marigold */
 :root{
-  --bg:#fff7e8; --surface:#ffffff; --ink:#3a1420; --muted:#7a5a60; --line:#efd9bf;
-  --maroon:#7d1531; --saffron:#f39a1e; --marigold:#ffc436; --leaf:#2f7d4f; --danger:#b3261e;
-  --foil1:#c9c3b8; --foil2:#e9e4da;
+  --bg:#fffaf3; --surface:#ffffff; --ink:#4a3338; --muted:#8c7378; --line:#f3e3d3;
+  --maroon:#c2416a; --saffron:#ffb65c; --marigold:#ffe39a; --leaf:#3c9a68; --danger:#c8463c;
+  --soft:#fff1e0; --rose-soft:#fde8ee;
+  --foil1:#d9d4cc; --foil2:#f1ede6;
   --display:"Yatra One","Baloo 2",Georgia,serif;
   --body:"Baloo 2",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#1d0f13; --surface:#2a161c; --ink:#fbeee0; --muted:#c9a9ad; --line:#4a2a32;
-  --maroon:#ff7d9a; --saffron:#ffae45; --marigold:#ffcf5a; --leaf:#6fd39a; --danger:#ff8a80;
-  --foil1:#8f8a82; --foil2:#b9b3a8; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#1d0f13; --surface:#2a161c; --ink:#fbeee0; --muted:#c9a9ad; --line:#4a2a32;
-  --maroon:#ff7d9a; --saffron:#ffae45; --marigold:#ffcf5a; --leaf:#6fd39a; --danger:#ff8a80;
-  --foil1:#8f8a82; --foil2:#b9b3a8; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
@@ -93,6 +88,17 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .pick-no{font-family:var(--display);font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
 .pick-t{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
 @media (prefers-reduced-motion:reduce){.pick{transition:none}}
+.ctabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--soft);border-radius:14px;padding:5px}
+.ctabs a{text-align:center;text-decoration:none;font-weight:700;color:var(--maroon);padding:8px;border-radius:10px}
+.ctabs a[aria-current="page"]{background:var(--surface);box-shadow:0 1px 4px rgba(194,65,106,.18)}
+.gift-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.gift{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.gift .g-emoji{font-size:40px;line-height:1.1;width:64px;height:64px;display:grid;place-items:center;border-radius:50%;background:var(--rose-soft)}
+.gift .g-name{font-weight:600;line-height:1.25;text-wrap:balance}
+.gift .g-tag{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:1px 8px}
+.g-bumper{background:var(--marigold);color:#6b4a12}
+.g-out{background:var(--line);color:var(--muted)}
+.gift.out{opacity:.55}
 .demo-flag{background:var(--saffron);color:#3a1420;text-align:center;font-weight:700;border-radius:10px;padding:4px}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:15}
 @media (prefers-reduced-motion:reduce){canvas.foil{transition:none}}
@@ -208,6 +214,22 @@ function wireLogo(){
   l.addEventListener("click",()=>{taps++;clearTimeout(t);t=setTimeout(()=>taps=0,1500);if(taps>=5){taps=0;location.hash="admin"}});
 }
 
+/* ---------- customer tabs + gifts page ---------- */
+function custTabs(active){
+  return `<nav class="ctabs" aria-label="Pages"><a href="#" ${active==="scratch"?'aria-current="page"':""}>Scratch &amp; Win</a><a href="#gifts" ${active==="gifts"?'aria-current="page"':""}>Our Gifts</a></nav>`;
+}
+function renderGifts(){
+  const list=S.prizes.filter(p=>p.weight>0).slice().sort((a,b)=>b.value-a.value);
+  const top=list.length?list[0].value:0;
+  $app.innerHTML=`<div class="wrap">${brand()}${custTabs("gifts")}
+    <div><h2>Gifts you can win</h2><p class="note">Every coupon is a surprise. Scratch one to find out what you get.</p></div>
+    <div class="gift-grid">${list.map(p=>{const out=p.qty>0&&p.given>=p.qty;const bump=!out&&p.value>=Math.max(500,top*.5);
+      return `<div class="gift${out?" out":""}"><span class="g-emoji">${esc(p.emoji||"🎁")}</span><span class="g-name">${esc(p.name)}</span>${out?'<span class="g-tag g-out">All given</span>':bump?'<span class="g-tag g-bumper">Bumper prize</span>':""}</div>`}).join("")}</div>
+    <a class="btn big" href="#" style="display:block;text-align:center;text-decoration:none">Scratch a coupon</a>
+  </div>`;
+  wireLogo();
+}
+
 /* ---------- customer page ---------- */
 function renderCustomer(){
   const left=remaining();
@@ -215,7 +237,7 @@ function renderCustomer(){
     $app.innerHTML=`<div class="wrap">${brand()}<div class="card" style="text-align:center"><h2>All coupons are over</h2><p class="note">Please ask at the counter about our next offer.</p></div></div>`;wireLogo();return;
   }
   const n=Math.max(1,Math.min(+S.cardsShown||12,left,30));
-  $app.innerHTML=`<div class="wrap">${brand()}
+  $app.innerHTML=`<div class="wrap">${brand()}${custTabs("scratch")}
     <div class="row between"><span class="ribbon">Scratch &amp; Win</span><span class="stock">Coupons left <b>${left}</b></span></div>
     <p class="hint" style="font-size:18px;color:var(--ink)">Pick any one coupon to scratch</p>
     <div class="pick-grid">${Array.from({length:n},(_,i)=>`<button class="pick" data-n="${i+1}" aria-label="Coupon ${i+1}"><span class="pick-star">★</span><span class="pick-no">${i+1}</span><span class="pick-t">Scratch me</span></button>`).join("")}</div>
@@ -391,6 +413,7 @@ function renderAdmin(){
 function route(){
   const h=location.hash.replace("#","");
   if(h==="admin"||h==="demo"){if(!unlocked)return renderPin(h);return h==="admin"?renderAdmin():renderDemo()}
+  if(h==="gifts")return renderGifts();
   renderCustomer();
 }
 window.addEventListener("hashchange",route);
