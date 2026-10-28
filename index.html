@@ -114,7 +114,7 @@ const KEY="vandana-scratch-v2";
 const DEFAULT={
   shopName:"Vandana Stores",
   tagline:"Scratch karo, inaam jeeto!",
-  pin:"1234",
+  pin:"7755",
   totalCoupons:200,
   issued:0,
   loseText:"Better luck next time",
@@ -142,6 +142,7 @@ const DEFAULT={
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function load(){try{const s=localStorage.getItem(KEY);if(s){return Object.assign(clone(DEFAULT),JSON.parse(s))}}catch(e){}return clone(DEFAULT)}
 let S=load();
+if(String(S.pin)==="1234"){S.pin="7755";save()}
 let CUR=null; // customer currently playing: {name, phone}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let unlocked=false; try{unlocked=sessionStorage.getItem(KEY+"-u")==="1"}catch(e){}
@@ -335,7 +336,6 @@ function renderPin(target){
       <div class="pin"><input id="pinv" type="password" inputmode="numeric" autocomplete="off" aria-label="PIN"></div>
       <p class="err" id="perr" hidden>That PIN is not right. Try again.</p>
       <div class="row"><button type="submit">Open</button><button type="button" class="ghost" id="back">Back to shop</button></div>
-      <p class="note">First time? The PIN is 1234. Change it in Settings.</p>
     </form></div>`;
   document.getElementById("pinv").focus();
   document.getElementById("back").onclick=()=>{location.hash=""};
