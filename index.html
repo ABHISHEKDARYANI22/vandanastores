@@ -84,6 +84,15 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .err{color:var(--danger);font-size:14px;margin:0;text-align:center}
 .log li{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:6px 0;font-size:14px}
 .log{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.pick{position:relative;aspect-ratio:3/4;max-width:100%;padding:8px;border-radius:14px;border:2px dashed var(--saffron);
+  background:linear-gradient(135deg,var(--foil1),var(--foil2) 50%,var(--foil1));color:#4a2a1a;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .15s}
+.pick:hover{transform:translateY(-3px) rotate(-1deg)}
+.pick-star{color:var(--maroon);font-size:20px;line-height:1}
+.pick-no{font-family:var(--display);font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
+.pick-t{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+@media (prefers-reduced-motion:reduce){.pick{transition:none}}
 .demo-flag{background:var(--saffron);color:#3a1420;text-align:center;font-weight:700;border-radius:10px;padding:4px}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:15}
 @media (prefers-reduced-motion:reduce){canvas.foil{transition:none}}
@@ -111,8 +120,16 @@ const DEFAULT={
     {id:"p4",name:"Dairy Milk Silk",emoji:"🎁",value:80,qty:25,given:0,weight:12},
     {id:"p5",name:"1 L Sunflower Oil",emoji:"🛢️",value:150,qty:15,given:0,weight:7},
     {id:"p6",name:"₹500 Shopping Voucher",emoji:"💰",value:500,qty:3,given:0,weight:2},
-    {id:"p7",name:"Pressure Cooker",emoji:"🍲",value:1500,qty:1,given:0,weight:1}
+    {id:"p7",name:"Pressure Cooker",emoji:"🍲",value:1500,qty:1,given:0,weight:1},
+    {id:"p8",name:"Free Biscuit Pack",emoji:"🍪",value:10,qty:100,given:0,weight:100},
+    {id:"p9",name:"Free Toffee",emoji:"🍬",value:5,qty:200,given:0,weight:150},
+    {id:"p10",name:"₹50 Off on ₹500 Bill",emoji:"🎟️",value:50,qty:50,given:0,weight:20},
+    {id:"p11",name:"Bath Soap",emoji:"🧼",value:35,qty:40,given:0,weight:28},
+    {id:"p12",name:"500 g Tea Pack",emoji:"🍵",value:120,qty:15,given:0,weight:8},
+    {id:"p13",name:"5 kg Atta",emoji:"🌾",value:250,qty:8,given:0,weight:4},
+    {id:"p14",name:"Steel Dinner Set",emoji:"🍽️",value:900,qty:2,given:0,weight:1}
   ],
+  cardsShown:12,
   log:[]
 };
 function clone(o){return JSON.parse(JSON.stringify(o))}
@@ -197,8 +214,18 @@ function renderCustomer(){
   if(left<=0){
     $app.innerHTML=`<div class="wrap">${brand()}<div class="card" style="text-align:center"><h2>All coupons are over</h2><p class="note">Please ask at the counter about our next offer.</p></div></div>`;wireLogo();return;
   }
+  const n=Math.max(1,Math.min(+S.cardsShown||12,left,30));
   $app.innerHTML=`<div class="wrap">${brand()}
     <div class="row between"><span class="ribbon">Scratch &amp; Win</span><span class="stock">Coupons left <b>${left}</b></span></div>
+    <p class="hint" style="font-size:18px;color:var(--ink)">Pick any one coupon to scratch</p>
+    <div class="pick-grid">${Array.from({length:n},(_,i)=>`<button class="pick" data-n="${i+1}" aria-label="Coupon ${i+1}"><span class="pick-star">★</span><span class="pick-no">${i+1}</span><span class="pick-t">Scratch me</span></button>`).join("")}</div>
+  </div>`;
+  wireLogo();
+  $app.querySelectorAll(".pick").forEach(b=>b.onclick=()=>openCard(+b.dataset.n));
+}
+function openCard(no){
+  $app.innerHTML=`<div class="wrap">${brand()}
+    <div class="row between"><span class="ribbon">Coupon ${no}</span><span class="stock">Coupons left <b>${remaining()}</b></span></div>
     <div class="scratch-zone" id="zone"><div class="prize" id="prize"></div><canvas class="foil"></canvas></div>
     <p class="hint" id="hint">Scratch the silver area to see your gift.</p>
     <button class="big" id="next" hidden>Next customer</button>
@@ -282,6 +309,7 @@ function renderAdmin(){
         <label>Total scratch coupons<input id="f-total" type="number" min="0" value="${S.totalCoupons}"></label>
         <label>Already scratched<input id="f-issued" type="number" min="0" value="${S.issued}"></label>
         <label>Coupons left<input value="${remaining()}" disabled></label>
+        <label>Coupons shown to pick from<input id="f-shown" type="number" min="1" max="30" value="${S.cardsShown}"></label>
       </div>
       <div class="grid2">
         <label>Shop name<input id="f-name" value="${esc(S.shopName)}"></label>
@@ -333,6 +361,7 @@ function renderAdmin(){
   const num=v=>Math.max(0,+v||0);
   const bind=(id,fn)=>document.getElementById(id).addEventListener("change",e=>{fn(e.target.value);save();renderAdmin()});
   bind("f-total",v=>S.totalCoupons=Math.floor(num(v)));
+  bind("f-shown",v=>S.cardsShown=Math.min(30,Math.max(1,Math.floor(num(v)))));
   bind("f-issued",v=>S.issued=Math.floor(num(v)));
   bind("f-name",v=>S.shopName=v.trim()||"Vandana Stores");
   bind("f-tag",v=>S.tagline=v);
