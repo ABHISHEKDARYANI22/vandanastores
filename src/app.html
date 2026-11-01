@@ -422,6 +422,9 @@ function renderPin(target){
 /* ---------- settings ---------- */
 function suggestWeight(v){v=+v||1;return Math.max(0.01,Math.round(100000/v)/100)}
 function renderAdmin(){
+  // weights are no longer edited by hand: they always follow the price
+  let wChanged=false;S.prizes.forEach(p=>{const w=suggestWeight(p.value);if(p.weight!==w){p.weight=w;wChanged=true}});
+  if(wChanged)saveAdmin();
   const items=pool(S,false);const tot=items.reduce((a,b)=>a+b.w,0)||1;
   const pct=w=>(w/tot*100).toFixed(1)+"%";
   $app.innerHTML=`<div class="wrap wide">${brand("Settings")}
@@ -444,21 +447,19 @@ function renderAdmin(){
 
     <section class="card" style="display:flex;flex-direction:column;gap:12px">
       <div class="row between"><h2>Prizes</h2><button class="small" id="add">Add prize</button></div>
-      <p class="note">Higher weight means the prize comes more often. Expensive items should get a small weight. "Auto" sets the weight from the price (1000 ÷ price), so a ₹100 screen guard is 100 times more common than a ₹9,999 phone. Stock 0 means unlimited.</p>
+      <p class="note">Chances are set automatically from the price: cheaper gifts come up more often, so a ₹100 screen guard is 100 times more common than a ₹9,999 phone. Stock 0 means unlimited.</p>
       <label class="row" style="flex-direction:row;color:var(--ink)"><input id="f-dyn" type="checkbox" style="width:auto" ${S.dynamicStock!==false?"checked":""}> Adjust chances by stock left (a gift with half its stock left comes up half as often)</label>
       <div class="table-wrap"><table>
-        <thead><tr><th>Icon</th><th>Prize</th><th class="num">Price ₹</th><th class="num">Weight</th><th class="num">Stock</th><th class="num">Given</th><th class="num">Chance</th><th></th></tr></thead>
+        <thead><tr><th>Icon</th><th>Prize</th><th class="num">Price ₹</th><th class="num">Stock</th><th class="num">Given</th><th class="num">Chance</th><th></th></tr></thead>
         <tbody>${S.prizes.map((p,i)=>{const out=p.qty>0&&p.given>=p.qty;return `<tr>
           <td style="width:64px"><input data-i="${i}" data-k="emoji" value="${esc(p.emoji||"")}" aria-label="Icon"></td>
           <td><input data-i="${i}" data-k="name" value="${esc(p.name)}" aria-label="Prize name"></td>
           <td style="width:90px"><input data-i="${i}" data-k="value" type="number" min="0" value="${p.value}" aria-label="Price"></td>
-          <td style="width:130px"><div class="row" style="flex-wrap:nowrap;gap:4px"><input data-i="${i}" data-k="weight" type="number" min="0" step="any" value="${p.weight}" aria-label="Weight"><button class="ghost small" data-auto="${i}" title="Set from price">Auto</button></div></td>
           <td style="width:80px"><input data-i="${i}" data-k="qty" type="number" min="0" value="${p.qty}" aria-label="Stock"></td>
           <td class="num">${p.given}</td>
           <td class="num"><span class="pct">${out?"Out":pct(liveWeight(S,p))}</span></td>
           <td><button class="danger small" data-del="${i}" aria-label="Remove ${esc(p.name)}">Remove</button></td></tr>`}).join("")}</tbody>
       </table></div>
-      <div class="row"><button class="ghost small" id="autoAll">Auto weights for all</button></div>
     </section>
 
     <section class="card" style="display:flex;flex-direction:column;gap:12px">
@@ -510,9 +511,7 @@ function renderAdmin(){
     const p=S.prizes[+e.target.dataset.i],k=e.target.dataset.k;
     p[k]=(k==="name"||k==="emoji")?e.target.value:num(e.target.value);
     if(k==="qty")p.qty=Math.floor(p.qty);saveAdmin();renderAdmin();toast("Saved")}));
-  $app.querySelectorAll("[data-auto]").forEach(b=>b.onclick=()=>{const p=S.prizes[+b.dataset.auto];p.weight=suggestWeight(p.value);saveAdmin();renderAdmin()});
   $app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.prizes.splice(+b.dataset.del,1);saveAdmin();renderAdmin();toast("Prize removed")});
-  document.getElementById("autoAll").onclick=()=>{S.prizes.forEach(p=>p.weight=suggestWeight(p.value));saveAdmin();renderAdmin();toast("Weights set from prices")};
   document.getElementById("add").onclick=()=>{S.prizes.push({id:"p"+Date.now(),name:"New gift",emoji:"🎁",value:500,qty:10,given:0,weight:2});saveAdmin();renderAdmin()};
   document.getElementById("goShop").onclick=()=>{location.hash=""};
   document.getElementById("goDemo").onclick=()=>location.hash="demo";
