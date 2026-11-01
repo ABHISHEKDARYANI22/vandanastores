@@ -149,7 +149,7 @@ if(!S.vehiclesAdded){S.vehiclesAdded=true;DEFAULT.prizes.filter(d=>d.id==="cycle
 let CUR=null; // customer currently playing: {name, phone}
 
 /* ---------- shared Google Sheet storage ---------- */
-const BAKED_SYNC=""; // Apps Script web app link used by every device; a link saved in Settings overrides it
+const BAKED_SYNC="https://script.google.com/macros/s/AKfycbxjwCorCCCgTObWNZqfMgRvSAmOB9fnAlZGFdm7q-YtZbNBAF2hIcJlupMMWALsNfxg/exec"; // Apps Script web app link used by every device; a link saved in Settings overrides it
 let SYNC_URL=BAKED_SYNC;try{SYNC_URL=localStorage.getItem(KEY+"-sync")||BAKED_SYNC}catch(e){}
 let PINV="";try{PINV=sessionStorage.getItem(KEY+"-p")||""}catch(e){}
 function setPinv(v){PINV=v;try{sessionStorage.setItem(KEY+"-p",v)}catch(e){}}
