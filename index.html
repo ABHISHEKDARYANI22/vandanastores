@@ -167,7 +167,9 @@ function cfgOf(){const c={};CFG_KEYS.forEach(k=>c[k]=clone(S[k]));return c}
 function applyCfg(c){if(!c||!c.prizes)return;CFG_KEYS.forEach(k=>{if(c[k]!==undefined)S[k]=c[k]});save()}
 async function api(action,body){
   const r=await fetch(SYNC_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action},body||{}))});
-  const j=await r.json();syncState="online";if(j.cfg)applyCfg(j.cfg);return j;
+  const j=await r.json();syncState="online";if(j.cfg)applyCfg(j.cfg);
+  if(j.error==="Wrong PIN"&&action!=="login"){setPinv("");setUnlocked(false);if(location.hash==="#admin"||location.hash==="#demo")setTimeout(()=>{toast("Please enter the owner PIN again");route()},0)}
+  return j;
 }
 let pushT=null,pushExtra={};
 function pushCfg(extra){
@@ -550,7 +552,7 @@ function renderAdmin(){
 /* ---------- routing ---------- */
 function route(){
   const h=location.hash.replace("#","");
-  if(h==="admin"||h==="demo"){if(!unlocked)return renderPin(h);if(h==="admin"){renderAdmin();return refreshLog()}return renderDemo()}
+  if(h==="admin"||h==="demo"){if(!unlocked||(SYNC_URL&&!PINV))return renderPin(h);if(h==="admin"){renderAdmin();return refreshLog()}return renderDemo()}
   if(h==="gifts")return renderGifts();
   renderCustomer();
 }
