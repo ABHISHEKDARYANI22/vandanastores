@@ -87,8 +87,14 @@ function handle(b) {
   return { ok: false, error: 'Unknown action' };
 }
 
+// with "adjust by stock" on, a gift's weight shrinks as its stock runs out
+function liveWeight(cfg, p) {
+  const w = +p.weight || 0;
+  if (cfg.dynamicStock === false || !(p.qty > 0)) return w;
+  return w * Math.max(0, p.qty - (p.given || 0)) / p.qty;
+}
 function draw(cfg) {
-  const items = cfg.prizes.filter(p => p.weight > 0 && (p.qty <= 0 || (p.given || 0) < p.qty)).map(p => ({ p: p, w: +p.weight }));
+  const items = cfg.prizes.filter(p => p.weight > 0 && (p.qty <= 0 || (p.given || 0) < p.qty)).map(p => ({ p: p, w: liveWeight(cfg, p) }));
   if (cfg.loseWeight > 0) items.push({ p: null, w: +cfg.loseWeight });
   const total = items.reduce((s, i) => s + i.w, 0);
   if (total <= 0) return null;

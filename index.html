@@ -147,6 +147,7 @@ const DEFAULT={
   ],
   cardsShown:12,
   onePerPhone:true,
+  dynamicStock:true,
   log:[]
 };
 function clone(o){return JSON.parse(JSON.stringify(o))}
@@ -162,7 +163,7 @@ let SYNC_URL=BAKED_SYNC;try{SYNC_URL=localStorage.getItem(KEY+"-sync")||BAKED_SY
 let PINV="";try{PINV=sessionStorage.getItem(KEY+"-p")||""}catch(e){}
 function setPinv(v){PINV=v;try{sessionStorage.setItem(KEY+"-p",v)}catch(e){}}
 let syncState=SYNC_URL?"connecting":"off"; // off | connecting | online | offline
-const CFG_KEYS=["shopName","tagline","totalCoupons","issued","loseText","loseWeight","prizes","cardsShown","onePerPhone"];
+const CFG_KEYS=["shopName","tagline","totalCoupons","issued","loseText","loseWeight","prizes","cardsShown","onePerPhone","dynamicStock"];
 function cfgOf(){const c={};CFG_KEYS.forEach(k=>c[k]=clone(S[k]));return c}
 function applyCfg(c){if(!c||!c.prizes)return;CFG_KEYS.forEach(k=>{if(c[k]!==undefined)S[k]=c[k]});save()}
 async function api(action,body){
@@ -192,9 +193,15 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 
 /* ---------- prize drawing ---------- */
 function pool(state,ignoreStock){
-  const items=state.prizes.filter(p=>p.weight>0&&(ignoreStock||p.qty<=0||p.given<p.qty)).map(p=>({p,w:+p.weight}));
+  const items=state.prizes.filter(p=>p.weight>0&&(ignoreStock||p.qty<=0||p.given<p.qty)).map(p=>({p,w:liveWeight(state,p)}));
   if(state.loseWeight>0)items.push({p:null,w:+state.loseWeight});
   return items;
+}
+// with "adjust by stock" on, a gift's weight shrinks as its stock runs out (half the stock left = half the chance)
+function liveWeight(state,p){
+  const w=+p.weight||0;
+  if(state.dynamicStock===false||!(p.qty>0))return w;
+  return w*Math.max(0,p.qty-(p.given||0))/p.qty;
 }
 function draw(state,ignoreStock){
   const items=pool(state,ignoreStock);const total=items.reduce((a,b)=>a+b.w,0);
@@ -449,6 +456,7 @@ function renderAdmin(){
     <section class="card" style="display:flex;flex-direction:column;gap:12px">
       <div class="row between"><h2>Prizes</h2><button class="small" id="add">Add prize</button></div>
       <p class="note">Higher weight means the prize comes more often. Expensive items should get a small weight. "Auto" sets the weight from the price (1000 ÷ price), so a ₹100 screen guard is 100 times more common than a ₹9,999 phone. Stock 0 means unlimited.</p>
+      <label class="row" style="flex-direction:row;color:var(--ink)"><input id="f-dyn" type="checkbox" style="width:auto" ${S.dynamicStock!==false?"checked":""}> Adjust chances by stock left (a gift with half its stock left comes up half as often)</label>
       <div class="table-wrap"><table>
         <thead><tr><th>Icon</th><th>Prize</th><th class="num">Price ₹</th><th class="num">Weight</th><th class="num">Stock</th><th class="num">Given</th><th class="num">Chance</th><th></th></tr></thead>
         <tbody>${S.prizes.map((p,i)=>{const out=p.qty>0&&p.given>=p.qty;return `<tr>
@@ -458,7 +466,7 @@ function renderAdmin(){
           <td style="width:130px"><div class="row" style="flex-wrap:nowrap;gap:4px"><input data-i="${i}" data-k="weight" type="number" min="0" step="any" value="${p.weight}" aria-label="Weight"><button class="ghost small" data-auto="${i}" title="Set from price">Auto</button></div></td>
           <td style="width:80px"><input data-i="${i}" data-k="qty" type="number" min="0" value="${p.qty}" aria-label="Stock"></td>
           <td class="num">${p.given}</td>
-          <td class="num"><span class="pct">${out?"Out":pct(+p.weight)}</span></td>
+          <td class="num"><span class="pct">${out?"Out":pct(liveWeight(S,p))}</span></td>
           <td><button class="danger small" data-del="${i}" aria-label="Remove ${esc(p.name)}">Remove</button></td></tr>`}).join("")}</tbody>
       </table></div>
       <div class="row"><button class="ghost small" id="autoAll">Auto weights for all</button></div>
@@ -526,6 +534,7 @@ function renderAdmin(){
   document.getElementById("confirmReset").onclick=()=>{
     if(SYNC_URL)return api("reset",{pin:PINV}).then(j=>{if(!j.ok)return toast("Not reset: "+(j.error||""));S.log=[];save();renderAdmin();toast("New campaign started. Old list kept as its own tab in the sheet")},()=>toast("No internet. Nothing was reset"));
     S.issued=0;S.prizes.forEach(p=>p.given=0);S.log=[];save();renderAdmin();toast("Counts reset")};
+  document.getElementById("f-dyn").onchange=e=>{S.dynamicStock=e.target.checked;saveAdmin();renderAdmin();toast("Saved")};
   document.getElementById("f-one").onchange=e=>{S.onePerPhone=e.target.checked;saveAdmin();toast("Saved")};
   $app.querySelectorAll("[data-hand]").forEach(c=>c.onchange=()=>{const l=S.log[+c.dataset.hand];l.handed=c.checked;save();
     const msg=c.checked?"Marked as handed over":"Marked as not handed over";
