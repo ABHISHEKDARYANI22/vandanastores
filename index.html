@@ -126,7 +126,7 @@ const DEFAULT={
   totalCoupons:200,
   issued:0,
   loseText:"Better luck next time",
-  loseWeight:10,
+  loseWeight:0,
   prizes:[
     {id:"p1",name:"Free Screen Guard",emoji:"🛡️",value:99,qty:100,given:0,weight:10.1},
     {id:"p2",name:"Mobile Back Cover",emoji:"🎨",value:199,qty:80,given:0,weight:5.03},
@@ -155,6 +155,7 @@ function load(){try{const s=localStorage.getItem(KEY);if(s){return Object.assign
 let S=load();
 if(String(S.pin)==="1234"){S.pin="7755";save()}
 if(!S.vehiclesAdded){S.vehiclesAdded=true;DEFAULT.prizes.filter(d=>d.id==="cycle"||d.id==="scooty").forEach(d=>{if(!S.prizes.some(x=>x.id===d.id))S.prizes.push(clone(d))});save()}
+S.loseWeight=0; // every customer wins a gift; no "better luck" outcome
 let CUR=null; // customer currently playing: {name, phone}
 
 /* ---------- shared Google Sheet storage ---------- */
@@ -164,8 +165,8 @@ let PINV="";try{PINV=sessionStorage.getItem(KEY+"-p")||""}catch(e){}
 function setPinv(v){PINV=v;try{sessionStorage.setItem(KEY+"-p",v)}catch(e){}}
 let syncState=SYNC_URL?"connecting":"off"; // off | connecting | online | offline
 const CFG_KEYS=["shopName","tagline","totalCoupons","issued","loseText","loseWeight","prizes","cardsShown","onePerPhone","dynamicStock"];
-function cfgOf(){const c={};CFG_KEYS.forEach(k=>c[k]=clone(S[k]));return c}
-function applyCfg(c){if(!c||!c.prizes)return;CFG_KEYS.forEach(k=>{if(c[k]!==undefined)S[k]=c[k]});save()}
+function cfgOf(){const c={};CFG_KEYS.forEach(k=>c[k]=clone(S[k]));c.loseWeight=0;return c}
+function applyCfg(c){if(!c||!c.prizes)return;CFG_KEYS.forEach(k=>{if(c[k]!==undefined)S[k]=c[k]});S.loseWeight=0;save()}
 async function api(action,body){
   const r=await fetch(SYNC_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action},body||{}))});
   const j=await r.json();syncState="online";if(j.cfg)applyCfg(j.cfg);
@@ -240,7 +241,7 @@ function mountScratch(zone,result,onReveal){
 }
 function prizeHTML(r){
   if(r&&r.prize)return `<span class="label">You won</span><span class="emoji">${esc(r.prize.emoji||"🎁")}</span><span class="name">${esc(r.prize.name)}</span><span class="code">${esc(r.code)}</span>`;
-  return `<span class="emoji">🙏</span><span class="name">${esc(S.loseText)}</span><span class="label">Thank you for shopping</span>`;
+  return `<span class="emoji">🎁</span><span class="name">Please ask at the counter for your gift</span><span class="label">Thank you for shopping</span>`;
 }
 
 /* ---------- confetti ---------- */
@@ -368,7 +369,7 @@ function showOthers(no,total,r){
   for(let i=1;i<=total;i++){
     if(i===no){cells.push(`<div class="pick open mine"><span class="o-emoji">${esc(r.prize?r.prize.emoji||"🎁":"🙏")}</span><span class="o-name">${esc(r.prize?r.prize.name:"No prize")}</span><span class="pick-t">Your coupon</span></div>`);continue}
     const p=fill[f++];
-    cells.push(`<div class="pick open"><span class="o-emoji">${esc(p?p.emoji||"🎁":"🙏")}</span><span class="o-name">${esc(p?p.name:"Better luck")}</span><span class="pick-t">Coupon ${i}</span></div>`);
+    cells.push(`<div class="pick open"><span class="o-emoji">${esc(p?p.emoji||"🎁":"🎁")}</span><span class="o-name">${esc(p?p.name:"Surprise gift")}</span><span class="pick-t">Coupon ${i}</span></div>`);
   }
   document.getElementById("othersGrid").innerHTML=cells.join("");
   document.getElementById("others").hidden=false;
@@ -399,7 +400,7 @@ function renderDemo(){
   }else{
     const N=1000,counts={};let lose=0;
     for(let i=0;i<N;i++){const p=draw(S,true);if(p)counts[p.id]=(counts[p.id]||0)+1;else lose++}
-    const rows=S.prizes.map(p=>({name:(p.emoji||"")+" "+p.name,n:counts[p.id]||0})).concat([{name:"🙏 "+S.loseText,n:lose}]);
+    const rows=S.prizes.map(p=>({name:(p.emoji||"")+" "+p.name,n:counts[p.id]||0})).concat(lose?[{name:"No gift left in stock",n:lose}]:[]);
     const max=Math.max(...rows.map(r=>r.n),1);
     body.innerHTML=`<div class="card"><h3>What 1,000 random cards would give</h3><p class="note">Uses your current weights. Run it again to see how it changes.</p>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">${rows.map(r=>`<div><div class="row between"><span>${esc(r.name)}</span><b style="font-variant-numeric:tabular-nums">${r.n}</b></div><div class="bar" style="width:${r.n/max*100}%"></div></div>`).join("")}</div>
@@ -446,11 +447,7 @@ function renderAdmin(){
         <label>Shop name<input id="f-name" value="${esc(S.shopName)}"></label>
         <label>Tagline<input id="f-tag" value="${esc(S.tagline)}"></label>
       </div>
-      <div class="grid2">
-        <label>No-prize message<input id="f-lose" value="${esc(S.loseText)}"></label>
-        <label>No-prize weight<input id="f-losew" type="number" min="0" value="${S.loseWeight}"></label>
-        <label>Chance of no prize<input value="${pct(+S.loseWeight)}" disabled></label>
-      </div>
+      <p class="note">Every coupon wins a gift. When every gift's stock is used up, coupons stop and the customer is asked to see the counter.</p>
     </section>
 
     <section class="card" style="display:flex;flex-direction:column;gap:12px">
@@ -514,8 +511,6 @@ function renderAdmin(){
   document.getElementById("f-issued").addEventListener("change",e=>{S.issued=Math.floor(num(e.target.value));saveAdmin({counts:true});renderAdmin()});
   bind("f-name",v=>S.shopName=v.trim()||"Vandana Stores");
   bind("f-tag",v=>S.tagline=v);
-  bind("f-lose",v=>S.loseText=v.trim()||"Better luck next time");
-  bind("f-losew",v=>S.loseWeight=num(v));
   document.getElementById("f-pin").addEventListener("change",e=>{const v=e.target.value.trim();if(!v)return;S.pin=v;save();
     if(!SYNC_URL){setPinv(v);return toast("PIN changed")}
     api("saveCfg",{pin:PINV,cfg:cfgOf(),newPin:v}).then(j=>{if(j.ok){setPinv(v);toast("PIN changed on all devices")}else toast("PIN not changed: "+(j.error||""))},()=>toast("No internet. PIN not changed"))});
