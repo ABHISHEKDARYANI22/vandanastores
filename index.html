@@ -104,6 +104,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .g-bumper{background:var(--marigold);color:#6b4a12}
 .g-out{background:var(--line);color:var(--muted)}
 .gift.out{opacity:.55}
+.sync{font-size:13px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--line);color:var(--muted)}
+.sync-online{background:#dff3e7;color:var(--leaf)}
+.sync-offline{background:#fde2df;color:var(--danger)}
 .demo-flag{background:var(--saffron);color:#3a1420;text-align:center;font-weight:700;border-radius:10px;padding:4px}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:15}
 @media (prefers-reduced-motion:reduce){canvas.foil{transition:none}}
@@ -152,6 +155,31 @@ let S=load();
 if(String(S.pin)==="1234"){S.pin="7755";save()}
 if(!S.vehiclesAdded){S.vehiclesAdded=true;DEFAULT.prizes.filter(d=>d.id==="cycle"||d.id==="scooty").forEach(d=>{if(!S.prizes.some(x=>x.id===d.id))S.prizes.push(clone(d))});save()}
 let CUR=null; // customer currently playing: {name, phone}
+
+/* ---------- shared Google Sheet storage ---------- */
+const BAKED_SYNC=""; // Apps Script web app link used by every device; a link saved in Settings overrides it
+let SYNC_URL=BAKED_SYNC;try{SYNC_URL=localStorage.getItem(KEY+"-sync")||BAKED_SYNC}catch(e){}
+let PINV="";try{PINV=sessionStorage.getItem(KEY+"-p")||""}catch(e){}
+function setPinv(v){PINV=v;try{sessionStorage.setItem(KEY+"-p",v)}catch(e){}}
+let syncState=SYNC_URL?"connecting":"off"; // off | connecting | online | offline
+const CFG_KEYS=["shopName","tagline","totalCoupons","issued","loseText","loseWeight","prizes","cardsShown","onePerPhone"];
+function cfgOf(){const c={};CFG_KEYS.forEach(k=>c[k]=clone(S[k]));return c}
+function applyCfg(c){if(!c||!c.prizes)return;CFG_KEYS.forEach(k=>{if(c[k]!==undefined)S[k]=c[k]});save()}
+async function api(action,body){
+  const r=await fetch(SYNC_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action},body||{}))});
+  const j=await r.json();syncState="online";if(j.cfg)applyCfg(j.cfg);return j;
+}
+let pushT=null,pushExtra={};
+function pushCfg(extra){
+  if(!SYNC_URL)return;Object.assign(pushExtra,extra||{});clearTimeout(pushT);
+  pushT=setTimeout(()=>{const x=pushExtra;pushExtra={};
+    api("saveCfg",Object.assign({pin:PINV,cfg:cfgOf()},x)).then(j=>toast(j.ok?"Saved for all devices":"Not saved to the sheet: "+(j.error||"unknown problem")),()=>{syncState="offline";toast("No internet. Saved on this device only")})},600);
+}
+function saveAdmin(extra){save();pushCfg(extra)}
+async function refreshLog(){
+  if(!SYNC_URL)return;
+  try{const j=await api("log",{pin:PINV});if(j.ok){S.log=j.log;save();if(location.hash==="#admin")renderAdmin()}}catch(e){syncState="offline"}
+}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let unlocked=false; try{unlocked=sessionStorage.getItem(KEY+"-u")==="1"}catch(e){}
 function setUnlocked(v){unlocked=v;try{v?sessionStorage.setItem(KEY+"-u","1"):sessionStorage.removeItem(KEY+"-u")}catch(e){}}
@@ -276,6 +304,12 @@ function renderDetails(){
     const fail=m=>{err.textContent=m;err.hidden=false};
     if(name.length<2)return fail("Please enter your name.");
     if(!/^[6-9]\d{9}$/.test(phone))return fail("Please enter a valid 10-digit mobile number.");
+    if(SYNC_URL){
+      const btn=e.target.querySelector("button[type=submit]");btn.disabled=true;btn.textContent="Checking…";
+      api("check",{phone}).then(j=>{if(j.dup){btn.disabled=false;btn.textContent="Continue to scratch";return fail("This mobile number has already scratched a coupon.")}CUR={name,phone};renderCustomer()},
+        ()=>{btn.disabled=false;btn.textContent="Continue to scratch";fail("No internet connection. Please try again.")});
+      return;
+    }
     if(S.onePerPhone&&S.log.some(l=>l.phone===phone))return fail("This mobile number has already scratched a coupon.");
     CUR={name,phone};renderCustomer();
   };
@@ -289,19 +323,30 @@ function openCard(no,total){
     <button class="big" id="next" hidden>Next customer</button>
   </div>`;
   wireLogo();
-  // decide result up-front, record it only once revealed
-  const p=draw(S,false);const r={prize:p,code:p?code():null};
+  const go=(p,r,local)=>{
   document.getElementById("prize").innerHTML=prizeHTML(r);
   mountScratch(document.getElementById("zone"),r,()=>{
-    S.issued++;
-    if(p){const real=S.prizes.find(x=>x.id===p.id);if(real)real.given++}
-    S.log.unshift({t:Date.now(),prize:p?p.name:null,code:r.code,name:CUR?CUR.name:"",phone:CUR?CUR.phone:"",handed:false});S.log=S.log.slice(0,2000);save();
+    if(local){
+      S.issued++;
+      if(p){const real=S.prizes.find(x=>x.id===p.id);if(real)real.given++}
+      S.log.unshift({t:Date.now(),prize:p?p.name:null,code:r.code,name:CUR?CUR.name:"",phone:CUR?CUR.phone:"",handed:false});S.log=S.log.slice(0,2000);save();
+    }
     CUR=null;
     if(p){confetti();document.getElementById("hint").textContent="Show this code at the counter to collect your gift."}
     else document.getElementById("hint").textContent="Thank you! Come again soon.";
     showOthers(no,total||1,r);
     const n=document.getElementById("next");n.hidden=false;n.onclick=renderCustomer;
   });
+  };
+  if(!SYNC_URL){const p=draw(S,false);return go(p,{prize:p,code:p?code():null},true)}
+  // shared mode: the sheet picks the gift so stock and counts stay right on every device
+  const box=document.getElementById("prize");box.innerHTML='<span class="label">Getting your coupon…</span>';
+  const stop=msg=>{box.innerHTML=`<span class="emoji">⚠️</span><span class="name">${esc(msg)}</span>`;const n=document.getElementById("next");n.hidden=false;n.textContent="Back";n.onclick=renderCustomer};
+  api("play",{name:CUR.name,phone:CUR.phone,coupon:no}).then(j=>{
+    if(!j.ok){if(j.error==="dup"){CUR=null;return stop("This mobile number has already scratched a coupon.")}if(j.error==="over")return stop("All coupons are over.");return stop("Something went wrong. Please try again.")}
+    const p=j.prizeId?(S.prizes.find(x=>x.id===j.prizeId)||{id:j.prizeId,name:j.prize,emoji:"🎁"}):null;
+    go(p,{prize:p,code:j.code||null},false);
+  },()=>stop("No internet connection. Please try again."));
 }
 // after a reveal, open the coupons the customer did not pick; Scooty and Bicycle always appear among them
 function showOthers(no,total,r){
@@ -366,8 +411,10 @@ function renderPin(target){
   document.getElementById("pinv").focus();
   document.getElementById("back").onclick=()=>{location.hash=""};
   document.getElementById("pinf").onsubmit=e=>{e.preventDefault();
-    if(document.getElementById("pinv").value===String(S.pin)){setUnlocked(true);route()}
-    else document.getElementById("perr").hidden=false};
+    const v=document.getElementById("pinv").value;
+    const ok=()=>{setPinv(v);setUnlocked(true);route()},bad=()=>{document.getElementById("perr").hidden=false};
+    if(SYNC_URL)return api("login",{pin:v}).then(j=>j.ok?ok():bad(),()=>v===String(S.pin)?ok():bad());
+    v===String(S.pin)?ok():bad()};
 }
 
 /* ---------- settings ---------- */
@@ -432,6 +479,18 @@ function renderAdmin(){
     </section>
 
     <section class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="row between"><h2>All devices</h2><span class="sync sync-${syncState}">${({off:"This device only",connecting:"Connecting…",online:"Connected to Google Sheet",offline:"Sheet not reachable"})[syncState]}</span></div>
+      <p class="note">With a Google Sheet link, every phone and laptop shares the same gifts, counts and customer list, and every customer is saved as a row in the sheet.</p>
+      <label>Google Sheet web app link<input id="f-sync" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(SYNC_URL)}"></label>
+      <div class="row"><button class="small" id="syncSave">Use this link</button>${SYNC_URL?'<button class="ghost small" id="syncPush">Send this device\'s settings to all devices</button><button class="ghost small" id="syncLog">Refresh customer list</button>':""}</div>
+      <h3 style="margin-top:8px">Copy settings by hand</h3>
+      <p class="note">Copy the settings code on one device and paste it on another. This moves gifts and settings, not the customer list.</p>
+      <div class="row"><button class="ghost small" id="expCfg">Copy settings code</button></div>
+      <label>Paste a settings code<textarea id="impTxt" rows="3" style="font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink);width:100%"></textarea></label>
+      <div class="row"><button class="ghost small" id="impCfg">Use pasted settings</button></div>
+    </section>
+
+    <section class="card" style="display:flex;flex-direction:column;gap:10px">
       <h2>Start a new campaign</h2>
       <p class="note">Sets scratched and given counts back to zero and clears the winners list. Prizes and weights stay.</p>
       <div class="row"><button class="danger" id="reset">Reset counts</button><button class="danger" id="confirmReset" hidden>Yes, reset now</button></div>
@@ -439,32 +498,49 @@ function renderAdmin(){
   </div>`;
   wireLogo();
   const num=v=>Math.max(0,+v||0);
-  const bind=(id,fn)=>document.getElementById(id).addEventListener("change",e=>{fn(e.target.value);save();renderAdmin()});
+  const bind=(id,fn)=>document.getElementById(id).addEventListener("change",e=>{fn(e.target.value);saveAdmin();renderAdmin()});
   bind("f-total",v=>S.totalCoupons=Math.floor(num(v)));
   bind("f-shown",v=>S.cardsShown=Math.min(30,Math.max(1,Math.floor(num(v)))));
-  bind("f-issued",v=>S.issued=Math.floor(num(v)));
+  document.getElementById("f-issued").addEventListener("change",e=>{S.issued=Math.floor(num(e.target.value));saveAdmin({counts:true});renderAdmin()});
   bind("f-name",v=>S.shopName=v.trim()||"Vandana Stores");
   bind("f-tag",v=>S.tagline=v);
   bind("f-lose",v=>S.loseText=v.trim()||"Better luck next time");
   bind("f-losew",v=>S.loseWeight=num(v));
-  bind("f-pin",v=>{if(v.trim()){S.pin=v.trim();toast("PIN changed")}});
+  document.getElementById("f-pin").addEventListener("change",e=>{const v=e.target.value.trim();if(!v)return;S.pin=v;save();
+    if(!SYNC_URL){setPinv(v);return toast("PIN changed")}
+    api("saveCfg",{pin:PINV,cfg:cfgOf(),newPin:v}).then(j=>{if(j.ok){setPinv(v);toast("PIN changed on all devices")}else toast("PIN not changed: "+(j.error||""))},()=>toast("No internet. PIN not changed"))});
   $app.querySelectorAll("input[data-k]").forEach(inp=>inp.addEventListener("change",e=>{
     const p=S.prizes[+e.target.dataset.i],k=e.target.dataset.k;
     p[k]=(k==="name"||k==="emoji")?e.target.value:num(e.target.value);
-    if(k==="qty")p.qty=Math.floor(p.qty);save();renderAdmin();toast("Saved")}));
-  $app.querySelectorAll("[data-auto]").forEach(b=>b.onclick=()=>{const p=S.prizes[+b.dataset.auto];p.weight=suggestWeight(p.value);save();renderAdmin()});
-  $app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.prizes.splice(+b.dataset.del,1);save();renderAdmin();toast("Prize removed")});
-  document.getElementById("autoAll").onclick=()=>{S.prizes.forEach(p=>p.weight=suggestWeight(p.value));save();renderAdmin();toast("Weights set from prices")};
-  document.getElementById("add").onclick=()=>{S.prizes.push({id:"p"+Date.now(),name:"New gift",emoji:"🎁",value:500,qty:10,given:0,weight:2});save();renderAdmin()};
+    if(k==="qty")p.qty=Math.floor(p.qty);saveAdmin();renderAdmin();toast("Saved")}));
+  $app.querySelectorAll("[data-auto]").forEach(b=>b.onclick=()=>{const p=S.prizes[+b.dataset.auto];p.weight=suggestWeight(p.value);saveAdmin();renderAdmin()});
+  $app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.prizes.splice(+b.dataset.del,1);saveAdmin();renderAdmin();toast("Prize removed")});
+  document.getElementById("autoAll").onclick=()=>{S.prizes.forEach(p=>p.weight=suggestWeight(p.value));saveAdmin();renderAdmin();toast("Weights set from prices")};
+  document.getElementById("add").onclick=()=>{S.prizes.push({id:"p"+Date.now(),name:"New gift",emoji:"🎁",value:500,qty:10,given:0,weight:2});saveAdmin();renderAdmin()};
   document.getElementById("goShop").onclick=()=>{location.hash=""};
   document.getElementById("goDemo").onclick=()=>location.hash="demo";
   document.getElementById("lock").onclick=()=>{setUnlocked(false);location.hash=""};
   document.getElementById("reset").onclick=()=>{document.getElementById("confirmReset").hidden=false};
-  document.getElementById("confirmReset").onclick=()=>{S.issued=0;S.prizes.forEach(p=>p.given=0);S.log=[];save();renderAdmin();toast("Counts reset")};
-  document.getElementById("f-one").onchange=e=>{S.onePerPhone=e.target.checked;save();toast("Saved")};
-  $app.querySelectorAll("[data-hand]").forEach(c=>c.onchange=()=>{S.log[+c.dataset.hand].handed=c.checked;save();toast(c.checked?"Marked as handed over":"Marked as not handed over")});
+  document.getElementById("confirmReset").onclick=()=>{
+    if(SYNC_URL)return api("reset",{pin:PINV}).then(j=>{if(!j.ok)return toast("Not reset: "+(j.error||""));S.log=[];save();renderAdmin();toast("New campaign started. Old list kept as its own tab in the sheet")},()=>toast("No internet. Nothing was reset"));
+    S.issued=0;S.prizes.forEach(p=>p.given=0);S.log=[];save();renderAdmin();toast("Counts reset")};
+  document.getElementById("f-one").onchange=e=>{S.onePerPhone=e.target.checked;saveAdmin();toast("Saved")};
+  $app.querySelectorAll("[data-hand]").forEach(c=>c.onchange=()=>{const l=S.log[+c.dataset.hand];l.handed=c.checked;save();
+    const msg=c.checked?"Marked as handed over":"Marked as not handed over";
+    if(SYNC_URL&&l.row)api("hand",{pin:PINV,row:l.row,value:c.checked}).then(j=>toast(j.ok?msg:"Not saved: "+(j.error||"")),()=>toast("No internet. Not saved to the sheet"));else toast(msg)});
   const q=document.getElementById("logq");
   if(q)q.oninput=()=>{const s=q.value.trim().toLowerCase();$app.querySelectorAll(".custlog tbody tr").forEach(tr=>tr.hidden=!!s&&!tr.dataset.q.includes(s))};
+  document.getElementById("syncSave").onclick=()=>{const v=document.getElementById("f-sync").value.trim();
+    if(v&&!/^https:\/\/script\.google(usercontent)?\.com\//.test(v))return toast("That does not look like an Apps Script web app link");
+    try{v?localStorage.setItem(KEY+"-sync",v):localStorage.removeItem(KEY+"-sync")}catch(e){}
+    SYNC_URL=v||BAKED_SYNC;syncState=SYNC_URL?"connecting":"off";renderAdmin();
+    if(SYNC_URL)api("get").then(j=>{if(!j.cfg)pushCfg({counts:true});renderAdmin();refreshLog()},()=>{syncState="offline";renderAdmin()})};
+  const sp=document.getElementById("syncPush");if(sp)sp.onclick=()=>{pushCfg({counts:true});};
+  const sl=document.getElementById("syncLog");if(sl)sl.onclick=()=>refreshLog().then(()=>toast("Customer list updated"));
+  document.getElementById("expCfg").onclick=()=>{const t=JSON.stringify(cfgOf());
+    navigator.clipboard.writeText(t).then(()=>toast("Settings code copied"),()=>{const ta=document.getElementById("impTxt");ta.value=t;ta.select();toast("Select and copy the code in the box")})};
+  document.getElementById("impCfg").onclick=()=>{let c=null;try{c=JSON.parse(document.getElementById("impTxt").value)}catch(e){}
+    if(!c||!Array.isArray(c.prizes))return toast("That settings code is not valid");applyCfg(c);saveAdmin({counts:true});renderAdmin();toast("Settings loaded")};
   document.getElementById("copyLog").onclick=()=>{
     const txt=["Time\tName\tMobile\tGift\tCode\tHanded over"].concat(S.log.map(l=>`${new Date(l.t).toLocaleString()}\t${l.name||""}\t${l.phone||""}\t${l.prize||"No prize"}\t${l.code||""}\t${l.prize?(l.handed?"Yes":"No"):""}`)).join("\n");
     navigator.clipboard.writeText(txt).then(()=>toast("Copied"),()=>toast("Copy is not allowed here"));
@@ -474,12 +550,17 @@ function renderAdmin(){
 /* ---------- routing ---------- */
 function route(){
   const h=location.hash.replace("#","");
-  if(h==="admin"||h==="demo"){if(!unlocked)return renderPin(h);return h==="admin"?renderAdmin():renderDemo()}
+  if(h==="admin"||h==="demo"){if(!unlocked)return renderPin(h);if(h==="admin"){renderAdmin();return refreshLog()}return renderDemo()}
   if(h==="gifts")return renderGifts();
   renderCustomer();
 }
 window.addEventListener("hashchange",route);
-if(document.fonts&&document.fonts.ready)document.fonts.ready.then(route);else route();
+function boot(){
+  if(!SYNC_URL)return route();
+  $app.innerHTML=`<div class="wrap">${brand()}<p class="hint">Loading…</p></div>`;
+  api("get").then(()=>{},()=>{syncState="offline";toast("No internet. Showing settings saved on this device")}).finally(route);
+}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(boot);else boot();
 })();
 </script>
 
